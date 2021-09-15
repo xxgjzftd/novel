@@ -1,4 +1,4 @@
-import { appendFile, open, writeFile } from 'fs/promises'
+import { open, writeFile } from 'fs/promises'
 import { get } from 'https'
 
 import { unified } from 'unified'
