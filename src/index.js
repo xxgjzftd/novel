@@ -1,4 +1,4 @@
-import { appendFile } from 'fs/promises'
+import { appendFile, open, writeFile } from 'fs/promises'
 import { get } from 'https'
 
 import { unified } from 'unified'
@@ -9,7 +9,8 @@ import { ParseEnglish } from 'parse-english'
 import { toString } from 'nlcst-to-string'
 
 const origin = 'https://wap.biquger.com'
-let next = ''
+const txt = await open('dist/无限道武者路.txt', 'a')
+let next = '/wapbiquge/3694/1159644'
 
 const x = (start) => {
   get(
@@ -27,9 +28,18 @@ const x = (start) => {
                 return function transformer (tree, file) {
                   const aa = selectAll('a.dise.sm', tree)
                   next = aa.find((el) => el.children[0]?.value?.includes('下一')).properties?.href
+                  writeFile('dist/data.txt', next)
                   const content = select('#nr', tree)
+                  let index
+                  while (~(index = content.children.findIndex((el) => el.properties?.id === 'content_tip'))) {
+                    content.children.splice(index, 1)
+                  }
+                  index = content.children.findIndex((el) => el.value?.includes('本章未完，请点击下一页继续阅读'))
+                  if (~index) content.children.splice(index, 1)
                   aa.find((el) => el.children[0]?.value?.includes('上一章')) &&
-                    content.children.unshift({ type: 'text', value: select('title', tree).children[0].value })
+                    content.children.unshift(
+                      { type: 'text', value: select('title', tree).children[0].value.split('_')[1] }
+                    )
                   return toNlcst(content, file, ParseEnglish)
                 }
               }
@@ -44,7 +54,7 @@ const x = (start) => {
             .process(data)
             .then(
               (file) => {
-                appendFile('dist/novel.txt', String(file)).then(
+                txt.appendFile(String(file)).then(
                   (_) => {
                     setTimeout(
                       () => {
@@ -62,4 +72,4 @@ const x = (start) => {
   )
 }
 
-x('/wapbiquge/3694/1159644')
+x(next)
